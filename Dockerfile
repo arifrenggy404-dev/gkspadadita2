@@ -28,9 +28,7 @@ RUN chmod -R 777 /app/storage /app/bootstrap/cache
 # Port default
 EXPOSE 8080
 
-# Script startup
-RUN chmod +x /app/start.sh
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
 
-CMD ["/bin/bash", "/app/start.sh"]
 
 
