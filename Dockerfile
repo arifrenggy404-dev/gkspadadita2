@@ -1,22 +1,32 @@
-FROM php:8.5-cli-alpine
+FROM php:8.3-cli-alpine
 
-# Install tools dan ekstensi yang diperlukan Laravel 13
-RUN apk add --no-cache git unzip bash \
-    && docker-php-ext-install pdo pdo_mysql
+# Install tools dan ekstensi yang diperlukan Laravel
+RUN apk add --no-cache git unzip bash libpng-dev libzip-dev zip \
+    && docker-php-ext-install pdo pdo_mysql gd zip
 
-# Install Composer versi terbaru secara resmi di dalam Docker
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /app
 
-# Menyalin seluruh file project ke dalam container
+# Menyalin file konfigurasi composer terlebih dahulu agar cache layer efisien
+COPY composer.json composer.lock /app/
+
+# Jalankan Composer Install
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Menyalin seluruh file project
 COPY . /app
 
-# Jalankan Composer Install untuk membuat folder vendor khusus PHP 8.4 Linux
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Jalankan script post-install jika ada
+RUN composer dump-autoload --optimize
 
-# Memastikan izin folder storage dan cache aman untuk Laravel 13
+# Memastikan izin folder storage dan cache
 RUN chmod -R 777 /app/storage /app/bootstrap/cache
 
-CMD php artisan serve --host=0.0.0.0 --port=8080
+# Port akan diatur oleh Railway melalui environment variable PORT
+EXPOSE 8080
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+
