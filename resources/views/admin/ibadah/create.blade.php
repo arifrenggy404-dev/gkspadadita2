@@ -503,4 +503,3 @@ makeCustomSelect(
 );
 </script>
 @endsection
-@endsection
