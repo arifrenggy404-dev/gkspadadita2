@@ -10,7 +10,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Menyalin file konfigurasi composer terlebih dahulu agar cache layer efisien
+# Menyalin file konfigurasi composer
 COPY composer.json composer.lock /app/
 
 # Jalankan Composer Install
@@ -19,14 +19,18 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 # Menyalin seluruh file project
 COPY . /app
 
-# Jalankan script post-install jika ada
+# Generate autoload
 RUN composer dump-autoload --optimize
 
 # Memastikan izin folder storage dan cache
 RUN chmod -R 777 /app/storage /app/bootstrap/cache
 
-# Port akan diatur oleh Railway melalui environment variable PORT
+# Port default
 EXPOSE 8080
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+# Script startup
+RUN chmod +x /app/start.sh
+
+CMD ["/bin/bash", "/app/start.sh"]
+
 
